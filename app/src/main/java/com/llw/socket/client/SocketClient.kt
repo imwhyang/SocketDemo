@@ -2,13 +2,21 @@ package com.llw.socket.client
 
 import android.os.Handler
 import android.util.Log
+import java.io.DataOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
-import java.net.*
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.Socket
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 /**
  * Socket客户端
@@ -92,6 +100,63 @@ object SocketClient {
         }
     }
 
+    fun sendFileToServer(fileUri: File) {
+        if (clientThreadPool == null) {
+            clientThreadPool = Executors.newSingleThreadExecutor()
+        }
+        clientThreadPool?.execute {
+            if (socket == null) {
+                mCallback.otherMsg("客户端还未连接")
+                return@execute
+            }
+            if (socket!!.isClosed) {
+                mCallback.otherMsg("Socket已关闭")
+                return@execute
+            }
+            outputStream = socket?.getOutputStream()
+            try {
+                outputStream?.let {
+//                    开始标识
+                    it.write(("fileStart" + fileUri.name).toByteArray())
+                    it.flush()
+
+                    val fis = FileInputStream(File(fileUri.path))
+                    val buffer = ByteArray(4096)
+                    var bytesRead: Int
+                    while (fis.read(buffer).also { bytesRead = it } != -1) {
+                        it.write(buffer, 0, bytesRead)
+                    }
+                    it.flush()
+//                    结束标识
+                    it.write("fileEnd".toByteArray())
+                    it.flush()
+
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                mCallback.otherMsg("向服务端发送文件:  失败")
+            }
+        }
+//        Thread {
+//            try {
+//                Socket("服务器地址", 端口号).use { socket ->
+//                    FileInputStream(File(fileUri.path)).use { fis ->
+//                        socket.getOutputStream().use { os ->
+//                            val buffer = ByteArray(4096)
+//                            var bytesRead: Int
+//                            while (fis.read(buffer).also { bytesRead = it } != -1) {
+//                                os.write(buffer, 0, bytesRead)
+//                            }
+//                            os.flush()
+//                        }
+//                    }
+//                }
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }.start()
+    }
+
     private val mHeartRunnable = Runnable { sendHeartbeat() }
 
     /**
@@ -157,12 +222,15 @@ object SocketClient {
                     is SocketTimeoutException -> {
                         Log.e(TAG, "连接超时，正在重连")
                     }
+
                     is NoRouteToHostException -> {
                         Log.e(TAG, "该地址不存在，请检查")
                     }
+
                     is ConnectException -> {
                         Log.e(TAG, "连接异常或被拒绝，请检查")
                     }
+
                     is SocketException -> {
                         when (e.message) {
                             "Already connected" -> Log.e(TAG, "连接异常或被拒绝，请检查")

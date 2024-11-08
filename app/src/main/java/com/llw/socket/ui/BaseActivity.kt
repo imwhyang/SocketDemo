@@ -3,7 +3,6 @@ package com.llw.socket.ui
 import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
-import android.os.Looper
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,14 +11,45 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.llw.socket.SocketApp
 import com.llw.socket.adapter.EmojiAdapter
 import com.llw.socket.databinding.DialogEmojiBinding
+import java.net.Inet4Address
+import java.net.NetworkInterface
 
-open class BaseActivity: AppCompatActivity() {
+open class BaseActivity : AppCompatActivity() {
 
     /**
      * 获取Ip地址
      */
     protected fun getIp() =
         intToIp((applicationContext.getSystemService(WIFI_SERVICE) as WifiManager).connectionInfo.ipAddress)
+
+    /**
+     * 获取当前IP地址
+     *
+     * @return
+     */
+    open fun getHotspotIp(): String? {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val intf = interfaces.nextElement()
+                // 检查接口是否是活动的
+                if (intf.isUp && !intf.isLoopback) {
+                    val addrs = intf.inetAddresses
+                    while (addrs.hasMoreElements()) {
+                        val addr = addrs.nextElement()
+                        // 确保是IPv4地址
+                        if (addr is Inet4Address) {
+                            return addr.getHostAddress()
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+        return null
+    }
 
     /**
      * Ip地址转换

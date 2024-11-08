@@ -50,4 +50,7 @@ dependencies {
     implementation "androidx.emoji2:emoji2-views:$emoji2_version"
     implementation "androidx.emoji2:emoji2-views-helper:$emoji2_version"
     implementation 'androidx.emoji2:emoji2-bundled:1.0.0-alpha03'
+
+    implementation 'io.github.molihuan:pathselector:1.1.16'
+
 }

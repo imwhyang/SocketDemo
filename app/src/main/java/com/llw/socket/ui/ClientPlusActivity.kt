@@ -2,15 +2,23 @@ package com.llw.socket.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.llw.socket.R
-import com.llw.socket.client.SocketClient
 import com.llw.socket.databinding.DialogEditIpBinding
+import com.molihuan.pathselector.PathSelector
+import com.molihuan.pathselector.entity.FileBean
+import com.molihuan.pathselector.fragment.BasePathSelectFragment
+import com.molihuan.pathselector.listener.CommonItemListener
+import com.molihuan.pathselector.utils.MConstants
+import com.molihuan.pathselector.utils.Mtools
+
 
 /**
  * 客户端Plus页面
  */
-class ClientPlusActivity: BaseSocketActivity() {
+class ClientPlusActivity : BaseSocketActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +37,37 @@ class ClientPlusActivity: BaseSocketActivity() {
                 showMsg("当前未开启服务或连接服务");return@setOnClickListener
             }
             sendToServer(msg)
+        }
+        ivMore.setOnClickListener {
+            //如果没有权限会自动申请权限
+            //如果没有权限会自动申请权限
+            PathSelector.build(this, MConstants.BUILD_DIALOG) //Dialog构建方式
+                .setMorePopupItemListeners(
+                    object : CommonItemListener("OK") {
+                        override fun onClick(
+                            v: View,
+                            tv: TextView,
+                            selectedFiles: List<FileBean>,
+                            currentPath: String,
+                            pathSelectFragment: BasePathSelectFragment
+                        ): Boolean {
+                            /**取消dialog弹窗
+                             * pathSelectFragment.close();
+                             */
+//                            val builder = StringBuilder()
+//                            builder.append("you selected:\n")
+//                            for (fileBean in selectedFiles) {
+//                                builder.append( fileBean.path)
+//                            }
+                            Mtools.toast(selectedFiles[0].path)
+                            sendFileToServer(selectedFiles[0].path)
+                            return false
+                        }
+                    }
+                )
+                .show() //开始构建
+
+
         }
     }
 

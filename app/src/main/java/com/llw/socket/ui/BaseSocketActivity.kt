@@ -21,6 +21,7 @@ import com.llw.socket.client.SocketClient
 import com.llw.socket.databinding.ActivityBaseSocketBinding
 import com.llw.socket.server.ServerCallback
 import com.llw.socket.server.SocketServer
+import java.io.File
 
 open class BaseSocketActivity : BaseActivity(), ServerCallback, ClientCallback, EmojiCallback {
 
@@ -88,7 +89,8 @@ open class BaseSocketActivity : BaseActivity(), ServerCallback, ClientCallback, 
      * 设置服务端页面标题
      */
     fun setServerTitle(startService: View.OnClickListener) =
-        setTitle("服务端", "IP：${getIp()}", "开启服务", startService)
+//        setTitle("服务端", "IP：${getIp()}", "开启服务", startService)
+        setTitle("服务端", "IP：${getHotspotIp()?:"未获取到ip"}", "开启服务", startService)
 
     /**
      * 设置客户端页面标题
@@ -168,6 +170,14 @@ open class BaseSocketActivity : BaseActivity(), ServerCallback, ClientCallback, 
         SocketClient.sendToServer(msg)
         etMsg.setText("")
         updateList(true, msg)
+    }
+    /**
+     * 发送到服务端
+     */
+    fun sendFileToServer(file: String) {
+        SocketClient.sendFileToServer(File(file))
+        etMsg.setText("")
+        updateList(true, file)
     }
 
     /**
